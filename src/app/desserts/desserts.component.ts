@@ -4,6 +4,7 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -35,6 +36,13 @@ export class DessertsComponent implements OnInit {
   desserts = signal<Dessert[]>([]);
   ratings = signal<DessertIdToRatingMap>({});
   ratedDesserts = computed(() => this.toRated(this.desserts(), this.ratings()));
+
+  constructor() {
+    effect(() => {
+      console.log('originalName', this.originalName());
+      console.log('englishName', this.englishName());
+    });
+  }
 
   ngOnInit(): void {
     this.search();

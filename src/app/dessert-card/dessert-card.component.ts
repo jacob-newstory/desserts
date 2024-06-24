@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   input,
   output,
 } from '@angular/core';
@@ -21,6 +22,12 @@ export class DessertCardComponent {
   blink = injectCdBlink();
 
   ratingChange = output<number>();
+
+  constructor() {
+    effect(() => {
+      console.log('dessert', this.dessert().englishName, this.dessert().rating);
+    });
+  }
 
   updateRating(newRating: number): void {
     this.ratingChange.emit(newRating);
