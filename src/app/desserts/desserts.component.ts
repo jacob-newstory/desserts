@@ -2,11 +2,20 @@ import { JsonPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import {
+  catchError,
+  combineLatest,
+  debounceTime,
+  filter,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Dessert } from '../data/dessert';
 import { DessertFilter } from '../data/dessert-filter';
@@ -23,43 +32,43 @@ import { ToastService } from '../shared/toast';
   styleUrl: './desserts.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DessertsComponent implements OnInit {
+export class DessertsComponent {
   #dessertService = inject(DessertService);
   #ratingService = inject(RatingService);
   #toastService = inject(ToastService);
 
-  originalName = signal('');
-  englishName = signal('');
+  originalName = signal('');  
+  englishName = signal('Cake');
   loading = signal(false);
 
-  desserts = signal<Dessert[]>([]);
   ratings = signal<DessertIdToRatingMap>({});
   ratedDesserts = computed(() => this.toRated(this.desserts(), this.ratings()));
 
-  ngOnInit(): void {
-    this.search();
-  }
+  originalName$ = toObservable(this.originalName);
+  englishName$ = toObservable(this.englishName);
 
-  search(): void {
-    const filter: DessertFilter = {
-      originalName: this.originalName(),
-      englishName: this.englishName(),
-    };
+  desserts$ = combineLatest({
+    originalName: this.originalName$,
+    englishName: this.englishName$,
+  }).pipe(
+    filter((c) => c.originalName.length >= 3 || c.englishName.length >= 3),
+    debounceTime(300),
+    tap(() => this.loading.set(true)),
+    switchMap((c) =>
+      this.#dessertService.find(c).pipe(
+        catchError((error) => {
+          this.#toastService.show('Error loading desserts!');
+          console.error(error);
+          return of([]);
+        }),
+      ),
+    ),
+    tap(() => this.loading.set(false)),
+  );
 
-    this.loading.set(true);
-
-    this.#dessertService.find(filter).subscribe({
-      next: (desserts) => {
-        this.desserts.set(desserts);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.loading.set(false);
-        this.#toastService.show('Error loading desserts!');
-        console.error(error);
-      },
-    });
-  }
+  desserts = toSignal(this.desserts$, {
+    initialValue: [],
+  });
 
   toRated(desserts: Dessert[], ratings: DessertIdToRatingMap): Dessert[] {
     return desserts.map((d) =>
