@@ -1,5 +1,5 @@
 import { JsonPipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dessert } from '../data/dessert';
 import { DessertFilter } from '../data/dessert-filter';
@@ -14,6 +14,7 @@ import { ToastService } from '../shared/toast';
   imports: [DessertCardComponent, FormsModule, JsonPipe],
   templateUrl: './desserts.component.html',
   styleUrl: './desserts.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DessertsComponent implements OnInit {
   #dessertService = inject(DessertService);
