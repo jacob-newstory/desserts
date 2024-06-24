@@ -1,5 +1,5 @@
 import { JsonPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dessert } from '../data/dessert';
 import { DessertFilter } from '../data/dessert-filter';
@@ -25,6 +25,8 @@ export class DessertsComponent implements OnInit {
   loading = signal(false);
 
   desserts = signal<Dessert[]>([]);
+  ratings = signal<DessertIdToRatingMap>({});
+  ratedDesserts = computed(() => this.toRated(this.desserts(), this.ratings()))
 
   ngOnInit(): void {
     this.search();
@@ -62,8 +64,7 @@ export class DessertsComponent implements OnInit {
 
     this.#ratingService.loadExpertRatings().subscribe({
       next: (ratings) => {
-        const rated = this.toRated(this.desserts(), ratings);
-        this.desserts.set(rated);
+        this.ratings.set(ratings);
         this.loading.set(false);
       },
       error: (error) => {
@@ -75,8 +76,9 @@ export class DessertsComponent implements OnInit {
   }
 
   updateRating(id: number, rating: number): void {
-    const ratings = { [id]: rating };
-    const rated = this.toRated(this.desserts(), ratings);
-    this.desserts.set(rated);
+    this.ratings.update((ratings) => ({
+      ...ratings,
+      [id]: rating,
+    }));
   }
 }
