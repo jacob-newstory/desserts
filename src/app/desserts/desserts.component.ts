@@ -42,6 +42,10 @@ export class DessertsComponent implements OnInit {
       console.log('originalName', this.originalName());
       console.log('englishName', this.englishName());
     });
+
+    effect(() => {
+      this.#toastService.show(this.desserts().length + ' desserts loaded!');
+    });
   }
 
   ngOnInit(): void {
