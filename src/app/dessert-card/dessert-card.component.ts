@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, input, output } from '@angular/core';
 import { Dessert } from '../data/dessert';
 import { RatingComponent } from '../rating/rating.component';
 
@@ -10,14 +10,11 @@ import { RatingComponent } from '../rating/rating.component';
   styleUrl: './dessert-card.component.css',
 })
 export class DessertCardComponent {
-  @Input({ required: true })
-  dessert!: Dessert;
+  dessert = input.required<Dessert>();
 
-  @Output()
-  ratingChange = new EventEmitter<number>();
+  ratingChange = output<number>();
 
   updateRating(newRating: number): void {
-    this.dessert.rating = newRating;
     this.ratingChange.emit(newRating);
   }
 }
